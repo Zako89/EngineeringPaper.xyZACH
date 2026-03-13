@@ -718,6 +718,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           lowerLimitInclusive: rangeFunction.lowerLimitInclusive,
           upperLimitArgument: rangeFunction.upperLimitArgument,
           upperLimitInclusive: rangeFunction.upperLimitInclusive,
+          logX: false,
           unitsQueryFunction: rangeFunction.unitsQueryFunction,
           inputUnits: this.inputUnits,
           inputUnitsLatex: this.inputUnitsLatex,

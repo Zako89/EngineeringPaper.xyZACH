@@ -287,6 +287,7 @@ class RangeQueryStatement(BaseQueryStatement):
     lowerLimitInclusive: bool
     upperLimitArgument: str
     upperLimitInclusive: bool
+    logX: bool
     unitsQueryFunction: str
     inputUnits: str
     inputUnitsLatex: str
@@ -586,6 +587,7 @@ class PlotData(TypedDict):
     input: list[float]
     output: list[float]
     inputReversed: bool
+    negLogLimit: bool
     inputUnits: str
     inputUnitsLatex: str
     inputCustomUnitsDefined: bool
@@ -710,6 +712,7 @@ class CombinedExpressionRange(TypedDict):
     upperLimitArgument: str
     lowerLimitInclusive: bool
     upperLimitInclusive: bool
+    logX: bool
     unitsQueryFunction: str
     isSubQuery: Literal[False]
     subQueryName: Literal[""]
@@ -2892,7 +2895,7 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
 def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fractions: bool):
     # sub parameter values
     parameter_subs: dict[Symbol, Expr] = {
-        symbols(param["name"]): sympify(param["si_value"], rational=convert_floats_to_fractions)
+        symbols(param["name"]): sympify(param["si_value"], rational=convert_floats_to_fractions) # pyright: ignore[reportArgumentType]
         for param in parameters
         if param["si_value"] is not None
     }
@@ -2962,7 +2965,7 @@ def sympify_statements(statements: list[Statement] | list[EqualityStatement],
         if statement["type"] != "local_sub" and statement["type"] != "blank" and \
            statement["type"] != "scatterQuery":
             try:
-                expression: Expr = sympify(statement["sympy"], rational=convert_floats_to_fractions)
+                expression: Expr = sympify(statement["sympy"], rational=convert_floats_to_fractions) # pyright: ignore[reportArgumentType]
 
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
@@ -3158,12 +3161,13 @@ def get_range_result(range_result: CombinedExpressionRange,
     upper_limit_result = range_dependencies[range_result["upperLimitArgument"]]
     upper_limit_inclusive = range_result["upperLimitInclusive"]
     units_result = range_dependencies[range_result["unitsQueryFunction"]]
+    log_x = range_result["logX"]
 
     if ( (not is_not_matrix_result(lower_limit_result)) or 
          (not is_not_matrix_result(upper_limit_result)) ):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "",
+                "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": False,
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                  "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", 
@@ -3174,7 +3178,7 @@ def get_range_result(range_result: CombinedExpressionRange,
     if not is_not_matrix_result(units_result):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "",
+                "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": False,
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
@@ -3186,7 +3190,7 @@ def get_range_result(range_result: CombinedExpressionRange,
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "",
+                "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": False,
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
@@ -3197,7 +3201,7 @@ def get_range_result(range_result: CombinedExpressionRange,
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "",
+                "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": False,
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
@@ -3207,6 +3211,15 @@ def get_range_result(range_result: CombinedExpressionRange,
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
+
+    neg_log_limit = False
+    if log_x:
+        if lower_limit <= 0.0 or upper_limit <= 0.0:
+            neg_log_limit = True 
+            log_x = False
+        else:
+            lower_limit = math.log10(lower_limit)
+            upper_limit = math.log10(upper_limit)
 
     input_reversed = True if lower_limit > upper_limit else False
 
@@ -3223,6 +3236,9 @@ def get_range_result(range_result: CombinedExpressionRange,
     for i in range(num_points-2):
         input_values.append(input_values[-1] + delta)
     input_values.append(upper_limit)
+
+    if log_x:
+        input_values = [10**value for value in input_values]
 
     lambda_error = False
     range_function = None
@@ -3244,7 +3260,7 @@ def get_range_result(range_result: CombinedExpressionRange,
        not all(map(lambda value: isinstance(value, numbers.Number) and not math.isinf(value), output_values)):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
-                "inputUnits": "", "inputUnitsLatex": "",
+                "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": neg_log_limit,
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
                 "inputNameLatex": custom_latex(sympify(range_result["freeParameter"]), variable_name_map),
@@ -3258,7 +3274,7 @@ def get_range_result(range_result: CombinedExpressionRange,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputCustomUnitsDefined": lower_limit_result["customUnitsDefined"], 
-            "inputCustomUnits": lower_limit_result["customUnits"], 
+            "inputCustomUnits": lower_limit_result["customUnits"], "negLogLimit": neg_log_limit,
             "inputCustomUnitsLatex": lower_limit_result["customUnitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "inputNameLatex": custom_latex(sympify(range_result["freeParameter"]), variable_name_map),
@@ -3273,7 +3289,7 @@ def get_range_result(range_result: CombinedExpressionRange,
 def get_scatter_error_object(error_message: str) -> PlotResult:
     return {"plot": True, "data": [{"isScatter": True, "numericOutput": False, "numericInput": True,
             "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-            "inputUnits": "", "inputUnitsLatex": "",
+            "inputUnits": "", "inputUnitsLatex": "", "negLogLimit": False,
             "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
             "inputName": "", "inputNameLatex": "",
             "outputUnits": "", "outputUnitsLatex": "",
@@ -3361,7 +3377,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             return get_scatter_error_object("One or more of the y values has inconsistent units or a dimension error")
 
         return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
-                "numericOutput": True, "numericInput": True,
+                "numericOutput": True, "numericInput": True, "negLogLimit": False,
                 "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
                 "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
                 "inputCustomUnitsDefined": x_units_custom_units_defined, 
@@ -3403,7 +3419,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     y_units_custom_units_latex = cast(Result, scatter_y_values)["customUnitsLatex"]
 
     return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
-            "numericOutput": True, "numericInput": True,
+            "numericOutput": True, "numericInput": True, "negLogLimit": False,
             "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
             "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
             "inputCustomUnitsDefined": x_units_custom_units_defined, 
@@ -3743,6 +3759,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                 "upperLimitArgument": statement["upperLimitArgument"],
                                                 "lowerLimitInclusive": statement["lowerLimitInclusive"],
                                                 "upperLimitInclusive": statement["upperLimitInclusive"],
+                                                "logX": statement["logX"],
                                                 "unitsQueryFunction": statement["unitsQueryFunction"],
                                                 "isSubQuery": False,
                                                 "subQueryName": ""

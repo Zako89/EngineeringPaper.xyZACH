@@ -72,6 +72,7 @@ export type PlotData = {
   input: number[];
   output: number[];
   inputReversed: boolean;
+  negLogLimit?: boolean; // some old database entries my not have this value
   inputUnits: string;
   inputUnitsLatex: string;
   inputCustomUnitsDefined?: boolean; // some old database entries my not have this value

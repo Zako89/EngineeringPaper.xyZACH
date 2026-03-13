@@ -884,8 +884,10 @@
               statements.push(parametricStatement);
             }
           } else { 
-            if ( (mathField.statement.type === "query" && mathField.statement.isRange) ||
-                  mathField.statement.type === "scatterQuery") {
+            if (mathField.statement.type === "query" && mathField.statement.isRange) {
+              mathField.statement.cellNum = cellNum;
+              mathField.statement.logX = cell.logX;
+            } else if (mathField.statement.type === "scatterQuery") {
               mathField.statement.cellNum = cellNum;
             }
             statements.push(mathField.statement);
