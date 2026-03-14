@@ -26,6 +26,16 @@
   }
 </style>
 
+<em>March 13, 2026 (Permalink: <a href="https://20260313.engineeringpaper.xyz" target="_blank">20260313.engineeringpaper.xyz</a>)</em>
+<h4>Improved Log Plotting</h4>
+<p>
+   The spacing for x-values is now logarithmic for log x plots. This produces evenly spaced points,
+   which creates smooth log x plots without requiring a large number of points. 
+   Additionally, a warning is provided to the user if either the upper or lower limit 
+   for a log x plot is non-positive.
+</p>
+<br>
+
 <em>March 7, 2026 (Permalink: <a href="https://20260307.engineeringpaper.xyz" target="_blank">20260307.engineeringpaper.xyz</a>)</em>
 <h4>Multiplying by Zero No Longer Removes Units</h4>
 <p>

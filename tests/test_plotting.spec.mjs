@@ -821,3 +821,45 @@ test('test infinity detection bug', async ({ browserName }) => {
 
   await expect(page.locator('#plot-expression-0-0 >> text=Results of expression does not evaluate to finite and real numeric values')).toBeAttached();
 });
+
+test('Test log x x-value spacing', async ({ browserName }) => {
+  test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox");
+
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, 'y=-x');
+
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.locator('#plot-expression-1-0 math-field.editable').type('y(1[in]<=x<=10000[in])with 3 points=');
+
+  await page.locator('text=log x').click();
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 1000});
+
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
+  await page.locator('h1').press(modifierKey+'+v');
+
+  let clipboardContents = await page.locator('h1').textContent();
+
+  clipboardContents = clipboardContents.replace(/\s+/g, ''); // remove whitespace
+
+  expect(clipboardContents).toBe('xy[in][m]1-0.0254100-2.5410000-254');
+});
+
+test('Test log x non-positive limit warning', async ({ browserName }) => {
+  await page.setLatex(0, 'y=-x');
+
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.locator('#plot-expression-1-0 math-field.editable').type('y(0<=x<=10000)=');
+
+  await page.locator('text=log x').click();
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Lower and/or upper limit less than or equal to zero').waitFor({state: 'attached', timeout: 1000});
+});

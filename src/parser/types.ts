@@ -227,6 +227,7 @@ export type RangeQueryStatement = BaseQueryStatement & {
   lowerLimitInclusive: boolean;
   upperLimitArgument: string;
   upperLimitInclusive: boolean;
+  logX: boolean;
   unitsQueryFunction: string;
   inputUnits: string;
   inputUnitsLatex: string;

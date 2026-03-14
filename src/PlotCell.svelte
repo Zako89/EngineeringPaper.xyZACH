@@ -501,12 +501,14 @@
       plotCell.squareAspectRatio = false;
     }
     triggerSaveNeeded();
+    mathCellChanged();
   }
 
   function handleAspectRatioChange() {
     if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
       plotCell.logX = false;
       plotCell.logY = false;
+      mathCellChanged();
     }
     triggerSaveNeeded();
   }
@@ -712,6 +714,11 @@
                   <span slot="tooltipText">
                     { renderData.unitsMismatchReason ? renderData.unitsMismatchReason : "Units Mismatch" }
                   </span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if plotData.negLogLimit}
+              <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">Lower and/or upper limit less than or equal to zero, not all points can be plotted with the log x option enabled</span>
                 <Error class="error"/>
               </TooltipIcon>
             {:else if plotData.inputReversed}
