@@ -39,7 +39,7 @@
   on:close
   on:submit={insertMatrix}
   hasScrollingContent={false}
-  preventCloseOnClickOutside={false}
+  preventCloseOnClickOutside={true}
 >
   <div class="number-input">
     <NumberInput
