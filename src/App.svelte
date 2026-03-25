@@ -2952,6 +2952,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                                            appState.config.simplifySymbolicExpressions = true;
                                            appState.config.convertFloatsToFractions = true;}}
         bind:open={modalInfo.modalOpen}
+        preventCloseOnClickOutside={true}
       >
         {#if modalInfo.mathCell}
           <MathCellConfigDialog
