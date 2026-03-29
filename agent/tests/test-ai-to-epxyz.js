@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import childProcess from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { convertAiJsonToEpxyz } from '../ai-to-epxyz.js';
@@ -67,10 +69,56 @@ function testDeterministicOutputAndShape() {
   assert.deepEqual(outputA.data.insertedSheets, []);
 }
 
+function testValidatorStrictnessChecks() {
+  const base = readJson(sampleInputPath);
+
+  assert.throws(
+    () => convertAiJsonToEpxyz({ ...base, extraTopLevel: true }),
+    /root contains unsupported field 'extraTopLevel'/,
+    'Unknown top-level keys should fail validation'
+  );
+
+  assert.throws(
+    () =>
+      convertAiJsonToEpxyz({
+        ...base,
+        blocks: [{ id: 'b1', type: 'text', content: 'hello', unknown: true }]
+      }),
+    /blocks\[0\] contains unsupported field 'unknown'/,
+    'Unknown block keys should fail validation'
+  );
+
+  assert.throws(
+    () =>
+      convertAiJsonToEpxyz({
+        ...base,
+        blocks: [{ id: 'b1', type: 'asset_ref', assetId: 'a1', label: 'A', url: 'not a uri' }]
+      }),
+    /blocks\[0\].url must be a valid URI/,
+    'Invalid asset_ref.url should fail validation'
+  );
+}
+
+function testCliFailsOnMissingTitleValue() {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-to-epxyz-cli-'));
+  const outputPath = path.join(tmpDir, 'out.epxyz');
+  const result = childProcess.spawnSync(
+    process.execPath,
+    [path.join(repoRoot, 'agent/ai-to-epxyz.js'), sampleInputPath, outputPath, '--title'],
+    { encoding: 'utf8' }
+  );
+
+  assert.notEqual(result.status, 0, 'CLI should fail when --title has no value');
+  assert.match(result.stderr, /--title requires a value/);
+  assert.equal(fs.existsSync(outputPath), false, 'No output file should be written on CLI failure');
+}
+
 function run() {
   testHappyPathFixture();
   testInvalidInputFails();
   testDeterministicOutputAndShape();
+  testValidatorStrictnessChecks();
+  testCliFailsOnMissingTitleValue();
   console.log('All converter tests passed.');
 }
 
