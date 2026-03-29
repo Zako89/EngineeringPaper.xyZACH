@@ -10,9 +10,11 @@ node agent/ai-to-epxyz.js agent/examples/sample-ai-input.json agent/examples/sam
 node agent/ai-to-epxyz.js agent/examples/sample-ai-input.json --title "Overridden Title"
 ```
 
+If `--title` is provided without a value, the CLI exits with a clear error (`--title requires a value`) and does not write an output file.
+
 Behavior:
 1. Reads and parses the input JSON.
-2. Validates against the MVP contract in `agent/AI-INPUT-SCHEMA.json` (practical runtime validation).
+2. Validates against the MVP contract in `agent/AI-INPUT-SCHEMA.json` (practical runtime validation with strict unknown-field rejection and key length/URI checks for core fields).
 3. Maps supported blocks to EngineeringPaper cells.
 4. Builds the full `.epxyz` envelope (`{ data, history }`).
 5. Writes formatted JSON to the output path.

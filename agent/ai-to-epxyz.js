@@ -25,7 +25,11 @@ function parseArgs(argv) {
     }
 
     if (arg === '--title') {
-      titleOverride = args[i + 1];
+      const value = args[i + 1];
+      if (value === undefined || value.startsWith('-')) {
+        throw new Error('--title requires a value');
+      }
+      titleOverride = value;
       i += 1;
       continue;
     }
