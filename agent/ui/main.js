@@ -1,6 +1,12 @@
 const jsonInput = document.getElementById('jsonInput');
+const outputPreview = document.getElementById('outputPreview');
 const convertButton = document.getElementById('convertButton');
 const downloadButton = document.getElementById('downloadButton');
+const copyButton = document.getElementById('copyButton');
+const strictValidation = document.getElementById('strictValidation');
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileStatus = document.getElementById('fileStatus');
 const errorArea = document.getElementById('error');
 const statusArea = document.getElementById('status');
 
@@ -22,10 +28,59 @@ function showStatus(message) {
   errorArea.textContent = '';
 }
 
+function setOutputState(outputText, filename) {
+  latestOutputText = outputText || null;
+  if (filename) {
+    latestFilename = filename;
+  }
+  outputPreview.value = latestOutputText || '';
+
+  const hasValidOutput = Boolean(latestOutputText);
+  downloadButton.disabled = !hasValidOutput;
+  copyButton.disabled = !hasValidOutput;
+}
+
+function resetOutputState() {
+  setOutputState(null);
+}
+
+function onInputMutated() {
+  if (latestOutputText !== null) {
+    resetOutputState();
+    showStatus('Input changed. Convert again to regenerate output.');
+  }
+}
+
+function isSupportedFile(file) {
+  const lowerName = file.name.toLowerCase();
+  return lowerName.endsWith('.txt') || lowerName.endsWith('.json');
+}
+
+async function loadFileToInput(file) {
+  if (!file) {
+    return;
+  }
+
+  if (!isSupportedFile(file)) {
+    showError('Unsupported file type. Please choose a .txt or .json file.');
+    fileStatus.textContent = '';
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    jsonInput.value = text;
+    fileStatus.textContent = `Loaded file: ${file.name}`;
+    clearMessages();
+    onInputMutated();
+  } catch (error) {
+    showError(error instanceof Error ? error.message : 'Failed to read file.');
+  }
+}
+
 async function convert() {
   clearMessages();
-  downloadButton.disabled = true;
-  latestOutputText = null;
+  resetOutputState();
 
   const inputText = jsonInput.value;
 
@@ -33,7 +88,10 @@ async function convert() {
     const response = await fetch('/api/convert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inputText })
+      body: JSON.stringify({
+        inputText,
+        strictValidation: strictValidation.checked
+      })
     });
 
     const data = await response.json();
@@ -43,9 +101,7 @@ async function convert() {
       return;
     }
 
-    latestOutputText = data.outputText;
-    latestFilename = data.suggestedFilename || 'output.epxyz';
-    downloadButton.disabled = false;
+    setOutputState(data.outputText, data.suggestedFilename || 'output.epxyz');
     showStatus(`Converted successfully: ${data.title} (${data.cellCount} cells). Ready to download ${latestFilename}.`);
   } catch (error) {
     showError(error instanceof Error ? error.message : 'Request failed.');
@@ -69,5 +125,85 @@ function download() {
   URL.revokeObjectURL(url);
 }
 
+async function copyOutput() {
+  if (!latestOutputText) {
+    showError('Nothing to copy yet. Convert valid JSON first.');
+    return;
+  }
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(latestOutputText);
+      showStatus('Output copied to clipboard.');
+      return;
+    }
+
+    outputPreview.focus();
+    outputPreview.select();
+    const copied = document.execCommand('copy');
+    outputPreview.setSelectionRange(0, 0);
+
+    if (copied) {
+      showStatus('Output copied to clipboard.');
+    } else {
+      showError('Clipboard access is unavailable in this browser.');
+    }
+  } catch (error) {
+    showError(error instanceof Error ? error.message : 'Failed to copy output.');
+  }
+}
+
+function setDropZoneActive(active) {
+  dropZone.classList.toggle('drag-active', active);
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  setDropZoneActive(false);
+  const files = event.dataTransfer?.files;
+  if (!files || files.length === 0) {
+    return;
+  }
+  loadFileToInput(files[0]);
+}
+
+function openFilePicker() {
+  fileInput.click();
+}
+
+jsonInput.addEventListener('input', onInputMutated);
 convertButton.addEventListener('click', convert);
 downloadButton.addEventListener('click', download);
+copyButton.addEventListener('click', copyOutput);
+
+dropZone.addEventListener('dragenter', (event) => {
+  event.preventDefault();
+  setDropZoneActive(true);
+});
+
+dropZone.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  setDropZoneActive(true);
+});
+
+dropZone.addEventListener('dragleave', (event) => {
+  if (!dropZone.contains(event.relatedTarget)) {
+    setDropZoneActive(false);
+  }
+});
+
+dropZone.addEventListener('drop', handleDrop);
+dropZone.addEventListener('click', openFilePicker);
+dropZone.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openFilePicker();
+  }
+});
+
+fileInput.addEventListener('change', () => {
+  loadFileToInput(fileInput.files?.[0]);
+  fileInput.value = '';
+});
+
+resetOutputState();

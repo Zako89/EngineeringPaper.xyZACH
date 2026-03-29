@@ -170,6 +170,26 @@ function testFriendlyRequiredFieldErrors() {
   );
 }
 
+function testStrictValidationMode() {
+  assert.throws(
+    () => convertAiJsonToEpxyz({ title: 'No blocks' }, { strictValidation: true }),
+    /Missing required top-level field\(s\): schemaVersion, blocks/,
+    'Strict mode should require schemaVersion and blocks'
+  );
+
+  assert.throws(
+    () => convertAiJsonToEpxyz({ schemaVersion: '1.0.0', title: 'Bad blocks', blocks: {} }, { strictValidation: true }),
+    /Strict validation: blocks must be an array\./,
+    'Strict mode should enforce array blocks'
+  );
+
+  assert.throws(
+    () => convertAiJsonToEpxyz({ schemaVersion: '1.0.0', title: 'Empty blocks', blocks: [] }, { strictValidation: true }),
+    /Strict validation: blocks must contain at least one block\./,
+    'Strict mode should reject empty blocks'
+  );
+}
+
 function testFilenameSanitization() {
   assert.equal(sanitizeOutputFilename('My: Sheet / Draft?'), 'My- Sheet - Draft-.epxyz');
   assert.equal(sanitizeOutputFilename('CON'), 'output.epxyz');
@@ -186,6 +206,7 @@ function run() {
   testMathLatexNormalization();
   testTextInputConversionAndFilename();
   testFriendlyRequiredFieldErrors();
+  testStrictValidationMode();
   testFilenameSanitization();
   console.log('All converter tests passed.');
 }

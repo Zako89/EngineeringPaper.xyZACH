@@ -91,6 +91,22 @@ function ensureRequiredTopLevelFields(value, options = {}) {
   }
 }
 
+function ensureStrictValidationRequirements(value, options = {}) {
+  if (!options.strictValidation) {
+    return;
+  }
+
+  ensureRequiredTopLevelFields(value, { requireSchemaVersion: true });
+
+  if (!Array.isArray(value.blocks)) {
+    throw new Error('Strict validation: blocks must be an array.');
+  }
+
+  if (value.blocks.length === 0) {
+    throw new Error('Strict validation: blocks must contain at least one block.');
+  }
+}
+
 export function sanitizeOutputFilename(title, fallback = 'output.epxyz') {
   const input = typeof title === 'string' ? title.trim() : '';
   const withoutIllegalChars = input
@@ -113,7 +129,10 @@ export function sanitizeOutputFilename(title, fallback = 'output.epxyz') {
 
 export function convertAiJsonToEpxyz(inputObject, options = {}) {
   ensureInputObject(inputObject);
-  ensureRequiredTopLevelFields(inputObject, { requireSchemaVersion: options.requireSchemaVersion });
+  ensureRequiredTopLevelFields(inputObject, {
+    requireSchemaVersion: options.requireSchemaVersion || options.strictValidation
+  });
+  ensureStrictValidationRequirements(inputObject, options);
 
   const normalizedInput = normalizeAiInput(inputObject);
   const schemaPath = path.resolve('agent', 'AI-INPUT-SCHEMA.json');
