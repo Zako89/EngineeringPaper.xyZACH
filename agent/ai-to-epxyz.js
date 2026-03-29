@@ -66,8 +66,9 @@ function printUsage() {
 }
 
 export function convertAiJsonToEpxyz(inputObject, options = {}) {
+  const normalizedInput = normalizeAiInput(inputObject);
   const schemaPath = path.resolve('agent', 'AI-INPUT-SCHEMA.json');
-  const validation = validateAiInputFile(schemaPath, inputObject);
+  const validation = validateAiInputFile(schemaPath, normalizedInput);
 
   if (!validation.valid) {
     throw new Error(`Input validation failed:\n- ${validation.errors.join('\n- ')}`);
@@ -87,6 +88,46 @@ export function convertAiJsonToEpxyz(inputObject, options = {}) {
     creationIso: options.creationIso,
     version: options.version
   });
+}
+
+function normalizeAiInput(inputObject) {
+  if (!inputObject || Array.isArray(inputObject) || typeof inputObject !== 'object') {
+    return inputObject;
+  }
+
+  const normalized = { ...inputObject };
+
+  if (normalized.schemaVersion === undefined) {
+    normalized.schemaVersion = '1.0.0';
+  } else if (normalized.schemaVersion !== '1.0.0') {
+    throw new Error(`Unsupported schemaVersion '${normalized.schemaVersion}'. Expected '1.0.0'.`);
+  }
+
+  if (Array.isArray(normalized.blocks)) {
+    normalized.blocks = normalized.blocks.map((block) => normalizeMathBlockLatex(block));
+  }
+
+  return normalized;
+}
+
+function normalizeMathBlockLatex(block) {
+  if (!block || Array.isArray(block) || typeof block !== 'object' || block.type !== 'math' || typeof block.latex !== 'string') {
+    return block;
+  }
+
+  const trimmedLatex = block.latex.trimEnd();
+  if (trimmedLatex.endsWith('=')) {
+    return block;
+  }
+
+  if (trimmedLatex.includes('=')) {
+    return block;
+  }
+
+  return {
+    ...block,
+    latex: `${trimmedLatex}=`
+  };
 }
 
 export function runCli(argv = process.argv) {
