@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engineeringpaper.xyz/schemas/ai-input-schema.json",
+  "title": "EngineeringPaper AI Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "title", "blocks"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "source": { "type": "string", "maxLength": 200 },
+        "author": { "type": "string", "maxLength": 200 },
+        "locale": { "type": "string", "maxLength": 20 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 100 },
+          "maxItems": 50,
+          "uniqueItems": true
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/block" },
+      "maxItems": 10000
+    }
+  },
+  "$defs": {
+    "baseBlock": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "markdown", "heading", "math", "equation", "code", "asset_ref"]
+        }
+      }
+    },
+    "textBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "content"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "text" },
+            "content": { "type": "string", "minLength": 1, "maxLength": 200000 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "markdownBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "content"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "markdown" },
+            "content": { "type": "string", "minLength": 1, "maxLength": 200000 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "headingBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "content", "level"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "heading" },
+            "content": { "type": "string", "minLength": 1, "maxLength": 5000 },
+            "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "mathBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "latex"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "math" },
+            "latex": { "type": "string", "minLength": 1, "maxLength": 50000 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "equationBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "latex"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "equation" },
+            "latex": { "type": "string", "minLength": 1, "maxLength": 50000 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "codeBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "content"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "code" },
+            "content": { "type": "string", "minLength": 1, "maxLength": 200000 },
+            "language": { "type": "string", "minLength": 1, "maxLength": 100 },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "assetRefBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseBlock" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "assetId", "label"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "type": { "const": "asset_ref" },
+            "assetId": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "label": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "url": { "type": "string", "format": "uri" },
+            "metadata": { "type": "object", "additionalProperties": true }
+          }
+        }
+      ]
+    },
+    "block": {
+      "oneOf": [
+        { "$ref": "#/$defs/textBlock" },
+        { "$ref": "#/$defs/markdownBlock" },
+        { "$ref": "#/$defs/headingBlock" },
+        { "$ref": "#/$defs/mathBlock" },
+        { "$ref": "#/$defs/equationBlock" },
+        { "$ref": "#/$defs/codeBlock" },
+        { "$ref": "#/$defs/assetRefBlock" }
+      ]
+    }
+  }
+}
