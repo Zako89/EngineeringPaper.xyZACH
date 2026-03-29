@@ -19,6 +19,35 @@ Behavior:
 4. Builds the full `.epxyz` envelope (`{ data, history }`).
 5. Writes formatted JSON to the output path.
 
+## Local paste UI usage
+
+Run:
+
+```bash
+npm run ai-converter-ui
+```
+
+Then open `http://127.0.0.1:3210` in your browser.
+
+Workflow:
+1. Paste raw AI JSON into the text area.
+2. Click **Convert**.
+3. If conversion succeeds, click **Download .epxyz**.
+
+The UI displays:
+- clear JSON and converter validation errors
+- success status with title and cell count
+- suggested filename derived from `title` with Windows-safe sanitization (`output.epxyz` fallback)
+
+## Reusable conversion API
+
+`agent/ai-to-epxyz.js` now exposes:
+- `convertAiJsonToEpxyz(inputObject, options)`
+- `convertAiTextToEpxyz(inputText, options)`
+- `sanitizeOutputFilename(title, fallback?)`
+
+Both CLI and paste UI use the same core conversion path to avoid duplicated logic.
+
 ## Supported block types (MVP)
 
 Required support implemented:
@@ -61,6 +90,7 @@ The script checks:
 - invalid input failure path
 - deterministic output with fixed `sheetId` and `creation` timestamp
 - structural consistency with `agent/EPXYZ-OUTPUT-SHAPE.json`
+- JSON text conversion and filename sanitization behavior
 
 ## MVP limitations
 
