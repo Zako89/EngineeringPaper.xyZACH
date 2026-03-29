@@ -1,0 +1,106 @@
+{
+  "data": {
+    "version": 20260313,
+    "config": {
+      "mathCellConfig": {
+        "symbolicOutput": false,
+        "showIntermediateResults": false,
+        "formatOptions": {
+          "notation": "auto",
+          "precision": 15,
+          "lowerExp": -3,
+          "upperExp": 5
+        }
+      },
+      "customBaseUnits": {
+        "mass": "kg",
+        "length": "m",
+        "time": "s",
+        "current": "A",
+        "temperature": "K",
+        "luminous_intensity": "cd",
+        "amount_of_substance": "mol",
+        "force": "N",
+        "area": "m^2",
+        "volume": "m^3",
+        "energy": "J",
+        "power": "W",
+        "pressure": "Pa",
+        "charge": "C",
+        "capacitance": "F",
+        "electric_potential": "V",
+        "resistance": "ohm",
+        "inductance": "H",
+        "conductance": "S",
+        "magnetic_flux": "Wb",
+        "magnetic_flux_density": "T",
+        "angle": "rad",
+        "information": "b"
+      },
+      "simplifySymbolicExpressions": true,
+      "convertFloatsToFractions": true,
+      "fluidConfig": {
+        "fluid": "Water",
+        "incompMixConc": 0.5,
+        "customMixture": [
+          {
+            "fluid": "R32",
+            "moleFraction": 0.697615
+          },
+          {
+            "fluid": "R125",
+            "moleFraction": 0.302385
+          }
+        ]
+      }
+    },
+    "cells": [
+      {
+        "type": "documentation",
+        "id": 0,
+        "json": {
+          "ops": [
+            {
+              "insert": "# Beam Bending Intro\n"
+            },
+            {
+              "insert": "Given a simply supported beam with central load.\n"
+            }
+          ]
+        }
+      },
+      {
+        "type": "math",
+        "id": 1,
+        "latex": "\\delta=\\frac{PL^3}{48EI}",
+        "config": null
+      },
+      {
+        "type": "documentation",
+        "id": 2,
+        "json": {
+          "ops": [
+            {
+              "insert": "Use **SI units** and report deflection in mm.\n"
+            }
+          ]
+        }
+      }
+    ],
+    "title": "Beam Bending Intro",
+    "results": [],
+    "system_results": [],
+    "codeCellResults": {},
+    "sub_results": [],
+    "nextId": 3,
+    "sheetId": "11111111-2222-4333-8444-555555555555",
+    "insertedSheets": []
+  },
+  "history": [
+    {
+      "url": "Beam Bending Intro",
+      "hash": "file",
+      "creation": "2026-03-29T00:00:00.000Z"
+    }
+  ]
+}
