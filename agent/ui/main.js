@@ -3,6 +3,7 @@ const outputPreview = document.getElementById('outputPreview');
 const convertButton = document.getElementById('convertButton');
 const downloadButton = document.getElementById('downloadButton');
 const copyButton = document.getElementById('copyButton');
+const openInEngineeringPaperButton = document.getElementById('openInEngineeringPaperButton');
 const strictValidation = document.getElementById('strictValidation');
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
@@ -38,6 +39,7 @@ function setOutputState(outputText, filename) {
   const hasValidOutput = Boolean(latestOutputText);
   downloadButton.disabled = !hasValidOutput;
   copyButton.disabled = !hasValidOutput;
+  openInEngineeringPaperButton.disabled = !hasValidOutput;
 }
 
 function resetOutputState() {
@@ -153,6 +155,27 @@ async function copyOutput() {
   }
 }
 
+
+
+function openInEngineeringPaper() {
+  if (!latestOutputText) {
+    showError('Nothing to open yet. Convert valid JSON first.');
+    return;
+  }
+
+  const openedWindow = window.open('https://engineeringpaper.xyz/', '_blank', 'noopener,noreferrer');
+
+  if (!openedWindow) {
+    showError('EngineeringPaper.xyz launch was blocked by your browser popup settings. Allow popups and try again.');
+    return;
+  }
+
+  // EngineeringPaper.xyz currently supports local file picker / drag-drop opening and share-link hashes,
+  // but does not expose a documented browser-to-browser import handoff endpoint or postMessage receiver.
+  // Keep the generated output untouched and guide users to Copy/Download workflows.
+  showStatus('Opened EngineeringPaper.xyz in a new tab. Direct auto-import from this converter is not currently supported; use Copy output or Download .epxyz.');
+}
+
 function setDropZoneActive(active) {
   dropZone.classList.toggle('drag-active', active);
 }
@@ -175,6 +198,7 @@ jsonInput.addEventListener('input', onInputMutated);
 convertButton.addEventListener('click', convert);
 downloadButton.addEventListener('click', download);
 copyButton.addEventListener('click', copyOutput);
+openInEngineeringPaperButton.addEventListener('click', openInEngineeringPaper);
 
 dropZone.addEventListener('dragenter', (event) => {
   event.preventDefault();
