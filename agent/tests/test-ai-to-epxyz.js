@@ -113,12 +113,48 @@ function testCliFailsOnMissingTitleValue() {
   assert.equal(fs.existsSync(outputPath), false, 'No output file should be written on CLI failure');
 }
 
+function testSchemaVersionNormalization() {
+  const base = readJson(sampleInputPath);
+  const { schemaVersion, ...withoutSchema } = base;
+
+  assert.doesNotThrow(
+    () => convertAiJsonToEpxyz(withoutSchema),
+    'Missing schemaVersion should default to 1.0.0'
+  );
+
+  assert.throws(
+    () => convertAiJsonToEpxyz({ ...base, schemaVersion: '2.0.0' }),
+    /Unsupported schemaVersion '2.0.0'\. Expected '1.0.0'\./,
+    'Unexpected schemaVersion should throw before conversion'
+  );
+}
+
+function testMathLatexNormalization() {
+  const output = convertAiJsonToEpxyz({
+    title: 'Math normalization',
+    blocks: [
+      { id: 'a', type: 'math', latex: '2 + 2' },
+      { id: 'b', type: 'math', latex: 'y = 3x + 2' },
+      { id: 'c', type: 'math', latex: '5 * 9=' },
+      { id: 'd', type: 'equation', latex: 'z + 1' }
+    ]
+  });
+
+  const mathCells = output.data.cells.filter((cell) => cell.type === 'math');
+  assert.equal(mathCells[0].latex, '2 + 2=');
+  assert.equal(mathCells[1].latex, 'y = 3x + 2');
+  assert.equal(mathCells[2].latex, '5 * 9=');
+  assert.equal(mathCells[3].latex, 'z + 1');
+}
+
 function run() {
   testHappyPathFixture();
   testInvalidInputFails();
   testDeterministicOutputAndShape();
   testValidatorStrictnessChecks();
   testCliFailsOnMissingTitleValue();
+  testSchemaVersionNormalization();
+  testMathLatexNormalization();
   console.log('All converter tests passed.');
 }
 
