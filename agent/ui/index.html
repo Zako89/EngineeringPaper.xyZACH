@@ -11,16 +11,39 @@
       <h1>AI JSON → .epxyz Converter</h1>
       <p>Paste EngineeringPaper-compatible AI JSON below, convert it, and download the generated <code>.epxyz</code>.</p>
 
+      <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Drop .txt or .json file or press Enter to browse">
+        Drop a <code>.txt</code> or <code>.json</code> file here, or click to browse.
+      </div>
+      <input id="fileInput" type="file" accept=".txt,.json,application/json,text/plain" hidden />
+      <p id="fileStatus" class="file-status" aria-live="polite"></p>
+
       <label for="jsonInput">AI JSON input</label>
       <textarea id="jsonInput" spellcheck="false" placeholder="Paste JSON object here..."></textarea>
+
+      <div class="toggle-row">
+        <label class="checkbox-label" for="strictValidation">
+          <input id="strictValidation" type="checkbox" />
+          Strict validation
+        </label>
+      </div>
 
       <div class="controls">
         <button id="convertButton" type="button">Convert</button>
         <button id="downloadButton" type="button" disabled>Download .epxyz</button>
+        <button id="copyButton" type="button" disabled>Copy output</button>
       </div>
 
       <p id="status" class="status" aria-live="polite"></p>
       <pre id="error" class="error" aria-live="assertive"></pre>
+
+      <label for="outputPreview">.epxyz output preview</label>
+      <textarea
+        id="outputPreview"
+        class="output-preview"
+        spellcheck="false"
+        readonly
+        placeholder="Converted .epxyz output appears here..."
+      ></textarea>
     </main>
 
     <script type="module" src="./main.js"></script>

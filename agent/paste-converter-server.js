@@ -68,6 +68,7 @@ const server = http.createServer(async (req, res) => {
       const parsed = JSON.parse(body || '{}');
       const conversion = convertAiTextToEpxyz(parsed.inputText, {
         titleOverride: parsed.titleOverride,
+        strictValidation: parsed.strictValidation === true,
         fallbackFilename: 'output.epxyz'
       });
 
