@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f7f7f8;
+  color: #111;
+}
+
+main {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 360px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.controls {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.status {
+  margin-top: 0.75rem;
+  color: #0a5a2a;
+}
+
+.error {
+  margin-top: 0.75rem;
+  white-space: pre-wrap;
+  color: #8f001a;
+  background: #ffe9ed;
+  border: 1px solid #ffc8d1;
+  border-radius: 4px;
+  padding: 0.6rem;
+  min-height: 1.5rem;
+}

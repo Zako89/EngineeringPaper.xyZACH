@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { convertAiJsonToEpxyz } from '../ai-to-epxyz.js';
+import { convertAiJsonToEpxyz, convertAiTextToEpxyz, sanitizeOutputFilename } from '../ai-to-epxyz.js';
 
 const repoRoot = path.resolve('.');
 const sampleInputPath = path.join(repoRoot, 'agent/examples/sample-ai-input.json');
@@ -147,6 +147,35 @@ function testMathLatexNormalization() {
   assert.equal(mathCells[3].latex, 'z + 1');
 }
 
+
+function testTextInputConversionAndFilename() {
+  const inputText = fs.readFileSync(sampleInputPath, 'utf8');
+  const conversion = convertAiTextToEpxyz(inputText);
+
+  assert.ok(conversion.outputText.includes('"data"'), 'Expected serialized epxyz text');
+  assert.equal(conversion.suggestedFilename, 'Beam Bending Intro.epxyz');
+}
+
+function testFriendlyRequiredFieldErrors() {
+  assert.throws(
+    () => convertAiJsonToEpxyz({ schemaVersion: '1.0.0' }),
+    /Missing required top-level field\(s\): title, blocks/,
+    'Missing required top-level fields should be clear'
+  );
+
+  assert.throws(
+    () => convertAiTextToEpxyz('{'),
+    /Input is not valid JSON:/,
+    'Invalid JSON text should produce a clear parse error'
+  );
+}
+
+function testFilenameSanitization() {
+  assert.equal(sanitizeOutputFilename('My: Sheet / Draft?'), 'My- Sheet - Draft-.epxyz');
+  assert.equal(sanitizeOutputFilename('CON'), 'output.epxyz');
+  assert.equal(sanitizeOutputFilename('   ...   '), 'output.epxyz');
+}
+
 function run() {
   testHappyPathFixture();
   testInvalidInputFails();
@@ -155,6 +184,9 @@ function run() {
   testCliFailsOnMissingTitleValue();
   testSchemaVersionNormalization();
   testMathLatexNormalization();
+  testTextInputConversionAndFilename();
+  testFriendlyRequiredFieldErrors();
+  testFilenameSanitization();
   console.log('All converter tests passed.');
 }
 

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI JSON to .epxyz</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>AI JSON → .epxyz Converter</h1>
+      <p>Paste EngineeringPaper-compatible AI JSON below, convert it, and download the generated <code>.epxyz</code>.</p>
+
+      <label for="jsonInput">AI JSON input</label>
+      <textarea id="jsonInput" spellcheck="false" placeholder="Paste JSON object here..."></textarea>
+
+      <div class="controls">
+        <button id="convertButton" type="button">Convert</button>
+        <button id="downloadButton" type="button" disabled>Download .epxyz</button>
+      </div>
+
+      <p id="status" class="status" aria-live="polite"></p>
+      <pre id="error" class="error" aria-live="assertive"></pre>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
