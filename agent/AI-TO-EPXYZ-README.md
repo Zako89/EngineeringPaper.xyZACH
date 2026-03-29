@@ -1,0 +1,67 @@
+# AI → `.epxyz` MVP Converter
+
+This converter transforms structured AI lesson JSON into EngineeringPaper `.epxyz` files.
+
+## CLI usage
+
+```bash
+node agent/ai-to-epxyz.js agent/examples/sample-ai-input.json
+node agent/ai-to-epxyz.js agent/examples/sample-ai-input.json agent/examples/sample-output.epxyz
+node agent/ai-to-epxyz.js agent/examples/sample-ai-input.json --title "Overridden Title"
+```
+
+Behavior:
+1. Reads and parses the input JSON.
+2. Validates against the MVP contract in `agent/AI-INPUT-SCHEMA.json` (practical runtime validation).
+3. Maps supported blocks to EngineeringPaper cells.
+4. Builds the full `.epxyz` envelope (`{ data, history }`).
+5. Writes formatted JSON to the output path.
+
+## Supported block types (MVP)
+
+Required support implemented:
+- `text` → documentation cell text
+- `markdown` → documentation cell literal markdown text
+- `heading` → documentation cell text prefixed with `#` markers
+- `math` → math cell (`latex`, `config: null`)
+- `equation` → math cell (`latex`, `config: null`)
+
+Conservative optional support implemented:
+- `code` → documentation cell fenced markdown block
+- `asset_ref` → documentation placeholder text (`[asset:label] id=...` + optional URL)
+
+## Output shape
+
+The generated `.epxyz` includes the full recommended top-level structure:
+- `data.version`
+- `data.config`
+- `data.cells`
+- `data.title`
+- `data.results`
+- `data.system_results`
+- `data.codeCellResults`
+- `data.sub_results`
+- `data.nextId`
+- `data.sheetId`
+- `data.insertedSheets`
+- top-level `history`
+
+## Tests
+
+Run:
+
+```bash
+node agent/tests/test-ai-to-epxyz.js
+```
+
+The script checks:
+- happy-path conversion against fixture output
+- invalid input failure path
+- deterministic output with fixed `sheetId` and `creation` timestamp
+- structural consistency with `agent/EPXYZ-OUTPUT-SHAPE.json`
+
+## MVP limitations
+
+- Markdown is not rendered into rich Quill formatting; it is preserved as plain text.
+- LaTeX is accepted as-is after newline/NUL normalization; semantic math validation is not performed.
+- Validation is dependency-free and practical (schema-aligned), not a full JSON Schema engine.

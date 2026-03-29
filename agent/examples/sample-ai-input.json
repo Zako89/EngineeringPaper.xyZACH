@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "Beam Bending Intro",
+  "metadata": {
+    "source": "mvp-fixture",
+    "author": "converter-test"
+  },
+  "blocks": [
+    {
+      "id": "h1",
+      "type": "heading",
+      "level": 1,
+      "content": "Beam Bending Intro"
+    },
+    {
+      "id": "p1",
+      "type": "text",
+      "content": "Given a simply supported beam with central load."
+    },
+    {
+      "id": "eq1",
+      "type": "equation",
+      "latex": "\\delta=\\frac{PL^3}{48EI}"
+    },
+    {
+      "id": "p2",
+      "type": "markdown",
+      "content": "Use **SI units** and report deflection in mm."
+    }
+  ]
+}
