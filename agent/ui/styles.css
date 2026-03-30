@@ -60,6 +60,12 @@ textarea {
   flex-wrap: wrap;
 }
 
+.control-help {
+  margin: 0.5rem 0 0;
+  color: #444;
+  font-size: 0.95rem;
+}
+
 button {
   padding: 0.5rem 0.9rem;
   cursor: pointer;
